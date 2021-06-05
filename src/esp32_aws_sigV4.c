@@ -72,6 +72,7 @@ char *aws_sigV4_to_hex_string(char *str)
     {
         sprintf(hex + (i * 2), "%02x", (unsigned int)str[i] & 0xFF);
     }
+    // Converting from binary to hex string does not automatically null terminate
     hex[65] = '\0';
     return hex;
 }
@@ -82,6 +83,7 @@ char *aws_sigV4_create_signing_key(char *secret_access_key, char *x_amz_date,
     char *AWS4;
     size_t AWS4_len = asprintf(&AWS4, "AWS4%s", secret_access_key);
 
+    // Keep the signed values in their binary representations (exactly 32 bytes) when signing
     char *kSigning = malloc(32 * sizeof(char));
     kSigning = aws_sigV4_sign(aws_sigV4_sign(aws_sigV4_sign(aws_sigV4_sign(AWS4, AWS4_len, x_amz_date, strlen(x_amz_date)), 32, aws_region, strlen(aws_region)), 32, aws_service, strlen(aws_service)), 32, "aws4_request", strlen("aws4_request"));
 
@@ -257,6 +259,7 @@ char *aws_sigV4_presign_url(char *access_key, char *secret_access_key,
 
 )
 {
+    // Service is set as S3 because it wouldn't make sense to presign URLs for any other service
     char *signing_key = aws_sigV4_create_signing_key(
         secret_access_key, x_amz_date, aws_region, "s3");
 
